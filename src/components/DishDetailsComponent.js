@@ -1,9 +1,14 @@
 import React ,{Component} from 'react';
-import { Card,CardBody,CardImg,CardText,CardTitle ,Breadcrumb,BreadcrumbItem,Modal,Button,ModalBody,ModalHeader,
-            Row,Col,Label} from 'reactstrap';
+import { Card,CardBody,CardImg,CardText,CardTitle ,
+        Breadcrumb,BreadcrumbItem,Modal,Button,ModalBody,
+        ModalHeader,Row,Col,Label} from 'reactstrap';
 import {Link} from 'react-router-dom';
-
 import {Errors,Control,LocalForm} from 'react-redux-form';
+import { Loading } from './LoadingComponent';
+import {baseUrl} from '../shared/baseUrl';
+import { FadeTransform, Fade, Stagger } from 'react-animation-components';
+
+
 
 
 const required = (val) => val && val.length;
@@ -27,7 +32,7 @@ class CommentForm extends Component{
 
     handleSubmit(values){
         this.toggleModal();
-        this.props.addComment(this.props.dishId,values.rating,values.yourname,values.comment)
+        this.props.postComment(this.props.dishId,values.rating,values.yourname,values.comment)
         
     }
 
@@ -119,19 +124,23 @@ function DishDetails (props){
    function RenderComments({comments}){
         if(comments!=null){
         return(
-            
-           comments.map(comment=>
+            <Stagger in>
+           {comments.map(comment=>
             <div>
+                
                 <ul key={comment.id} className="list-unstyled">
-                    <li>
+                <Fade in>
+                    <li key={comment.id}>
                         <p>{comment.comment}</p>
                     <p>-- {comment.author} ,{new Intl.DateTimeFormat('en-US', { year: 'numeric', month: 'short', day: '2-digit'}).format(new Date(Date.parse(comment.date)))}</p>
                     </li>
+                    </Fade>
                 </ul>
-            </div>    
+                
+           </div>        
             
-            )
-            
+            )}
+            </Stagger>
             
             );
         }
@@ -145,7 +154,25 @@ function DishDetails (props){
     
         const dish=props.dish;
         
-            if (dish != null){
+        if (props.isLoading) {
+            return(
+                <div className="container">
+                    <div className="row">            
+                        <Loading />
+                    </div>
+                </div>
+            );
+        }
+        else if (props.errMess) {
+            return(
+                <div className="container">
+                    <div className="row">            
+                        <h4>{props.errMess}</h4>
+                    </div>
+                </div>
+            );
+        }
+        else  if (dish != null){
                  
                return(     
                    <div className="container">
@@ -161,18 +188,24 @@ function DishDetails (props){
             </div>
                         <div className="row">
                         <div className="col-12 col-md-5 m-1">
+                        <FadeTransform
+                in
+                transformProps={{
+                    exitTransform: 'scale(0.5) translateY(-50%)'
+                }}>
                         <Card>
-                                <CardImg width="100%" src={dish.image} alt={dish.name} />  
+                                <CardImg width="100%" src={baseUrl + dish.image} alt={dish.name} />  
                                 <CardBody>
                                 <CardTitle>{dish.name}</CardTitle>
                                 <CardText>{dish.description}</CardText>
                                 </CardBody>
                             </Card>
+                            </FadeTransform>
                         </div>
                             <div className="col-12 col-md-5 m-1">
                                 <h4>Comments</h4>
                                 <RenderComments comments={props.comments}/>
-                                <CommentForm  dishId={dish.id} addComment={props.addComment}/>
+                                <CommentForm  dishId={dish.id} postComment={props.postComment}/>
                             </div>
                             </div>
                      </div>  
